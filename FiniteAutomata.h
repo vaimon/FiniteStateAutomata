@@ -71,9 +71,9 @@ public:
 		std::string body = "           |";
 		std::string down = "-----------|";
 		for (auto s : alphabet) {
-			head += "____________";
-			body += "     " + std::string(1, s) + "     |";
-			down += "-----------|";
+			head += "__________________";
+			body += "        " + std::string(1, s) + "        |";
+			down += "-----------------|";
 		}
 		head.replace(--head.end(), head.end(), "");
 		std::cout << head << std::endl << body << std::endl << down << std::endl;
@@ -83,17 +83,17 @@ public:
 			centerText(st.first.c_str(),5);
 			std::cout << "   |   ";
 			for (auto s : alphabet) {
-				centerText(st.second[s].c_str(),5);
+				centerText(st.second[s].c_str(),11);
 				std::cout << "   |   ";
 			}
 			std::cout << "\n";
-			std::cout << "-----------|-----------|-----------|\n";
+			std::cout << down << std::endl;
 		}
 		std::cout << std::endl;
 	}
 
 	bool recognize(const std::string& input) {
-		std::string state = "1";
+		std::string state = startingState;
 		for (auto p = input.begin(); p < input.end(); p++) {
 			state = transitionFunction[state][*p];
 		}
@@ -117,8 +117,6 @@ private:
 		int padlen = (fieldWidth - strlen(text)) / 2;
 		printf("%*s%s%*s", padlen, "", text, padlen, "");
 	}
-
-
 
 
 };
