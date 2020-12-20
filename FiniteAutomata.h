@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <initializer_list>
 #include <set>
+#include <queue>
+#include <algorithm>
 
 class FiniteAutomata {
 	std::map<std::string, std::map<char, std::set<std::string>>> transitionFunction;
@@ -71,20 +73,34 @@ public:
 	}
 
 	void printTransitionFunction() {
-		std::string head = "            ";
-		std::string body = "           |";
-		std::string down = "-----------|";
+		int length = getLongestState();
+		std::string head = generateString(' ', length + 7);
+		std::string body = generateString(' ',length + 6) + "|";
+		std::string down = generateString('-',length + 6) + "|";
 		for (auto s : alphabet) {
-			head += "__________________";
-			body += "        " + std::string(1, s) + "        |";
-			down += "-----------------|";
+			head += generateString('_', length*2 + 6);
+			body += generateString(' ', (length*2 + 5)/2) + std::string(1, s) + generateString(' ', (length*2 + 6) / 2) +"|";
+			down += generateString('-', length*2 + 6) + "|";
 		}
-		head.replace(--head.end(), head.end(), "");
+		head += "_";
 		std::cout << head << std::endl << body << std::endl << down << std::endl;
 
 		for (auto st : transitionFunction) {
-			std::cout << "   ";
-			centerText(st.first.c_str(),5);
+			if (std::find(finiteStates.begin(), finiteStates.end(), st.first) != finiteStates.end()) {
+				std::cout << "F";
+			}
+			else
+			{
+				std::cout << " ";
+			}
+			if (st.first == startingState) {
+				std::cout << "->";
+			}
+			else
+			{
+				std::cout << "  ";
+			}
+			centerText(st.first.c_str(), length);
 			std::cout << "   |   ";
 			for (auto s : alphabet) {
 				std::string wholestate = "";
@@ -99,8 +115,8 @@ public:
 				{
 					wholestate = " ";
 				}
-				
-				centerText(wholestate.c_str(),11);
+
+				centerText(wholestate.c_str(), length*2);
 				std::cout << "   |   ";
 			}
 			std::cout << "\n";
@@ -111,6 +127,53 @@ public:
 
 	bool recognize(const std::string& input) {
 		return recognize_work(input, startingState);
+	}
+
+	void determine() {
+		std::map<std::string, std::map<char, std::set<std::string>>> newTransitionFunction;
+		std::queue<std::set<std::string>> queue;
+		for (auto tr : transitionFunction[startingState]) {
+			auto newState = transitionFunction[startingState][tr.first];
+			newTransitionFunction["{" + startingState + "}"][tr.first].insert(formatSet(newState));
+			queue.push(newState);
+		}
+		while (!queue.empty())
+		{
+			auto stateSet = queue.front();
+			auto newStateName = formatSet(stateSet);
+			if (newTransitionFunction.find(newStateName) == newTransitionFunction.end()) {
+				for (auto sym: alphabet)
+				{
+					std::set<std::string> newState;
+					for (auto it = stateSet.begin(); it != stateSet.end(); it++) {
+						auto oldState = transitionFunction[*it][sym];
+						newState = getUnion(oldState, newState);
+						queue.push(newState);
+					}
+					if (newState.empty()) {
+						continue;
+					}
+					newTransitionFunction[newStateName][sym].insert(formatSet(newState));
+				}
+			}
+			queue.pop();
+		}
+		
+		std::vector<std::string> newFiniteStates;
+		for (auto pair : newTransitionFunction) {
+			for (auto old : finiteStates) {
+				if (pair.first.find(old) != std::string::npos) {
+					newFiniteStates.push_back(pair.first);
+					continue;
+				}
+			}
+		}
+
+		finiteStates = newFiniteStates;
+		startingState = "{" + startingState + "}";
+		stateCount = transitionFunction.size();
+		transitionFunction = newTransitionFunction;
+
 	}
 
 private:
@@ -147,7 +210,51 @@ private:
 	void centerText(const char* text, int fieldWidth) {
 		int padlen = (fieldWidth - strlen(text)) / 2;
 		printf("%*s%s%*s", padlen, "", text, padlen, "");
+		if ((fieldWidth - strlen(text)) % 2 == 1) {
+			printf(" ");
+		}
 	}
 
+	std::string formatSet(std::set<std::string> in) {
+		if (in.empty()) {
+			return " ";
+		}
+		std::string res = "{";
+		for (auto p = in.begin(); p != --in.end(); p++)
+		{
+			res += *p + ", ";
+		}
+		res += *(--in.end()) + "}";
+		return res;
+	}
+
+	std::set<std::string> getUnion(const std::set<std::string>& a, const std::set<std::string>& b)
+	{
+		std::set<std::string> result = a;
+		result.insert(b.begin(), b.end());
+		return result;
+	}
+
+	int getLongestState() {
+		int max = 0;
+		for (auto pair : transitionFunction) {
+			if (pair.first.size() > max) {
+				max = pair.first.size();
+			}
+		}
+		if (max < 2) {
+			return 5;
+		}
+		return max;
+	}
+
+	std::string generateString(char elem, int count) {
+		std::string res = "";
+		for (int i = 0; i < count; i++)
+		{
+			res += elem;
+		}
+		return res;
+	}
 
 };

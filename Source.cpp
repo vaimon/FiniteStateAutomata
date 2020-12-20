@@ -18,13 +18,19 @@ int main() {
 	setlocale(LC_ALL, "RUS");
 	showTitle("Условия задачи");
 	cout << "Недетерминированный конечный автомат задан в виде таблицы переходов. Напишите программу, которая считает эту таблицу из файла и с помощью алгоритма детерминизации строит эквивалентный детерминированный автомат.\n";
-	FiniteAutomata automata("automata.txt");
+	//FiniteAutomata automata("automata.txt");
+	FiniteAutomata automata("automata3.txt");
 	showTitle("Функция переходов");
 	automata.printTransitionFunction();
 	showTitle("Проверка на принадлежность");
-	cout << "Введите слово, принадлежность которого надо проверить. \nВведите eps для проверки пустого слова. Для завершения введите -1:" << endl;
+	//cout << "Введите слово, принадлежность которого надо проверить. \nВведите eps для проверки пустого слова. Для завершения введите -1:" << endl;
 	std::string str;
-	while (true)
+
+	automata.determine();
+
+	automata.printTransitionFunction();
+
+	/*while (true)
 	{
 		cout << "\n> ";
 		cin >> str;
@@ -51,6 +57,6 @@ int main() {
 		else {
 			cout << "Слово не принадлежит языку L.\n";
 		}
-	}
+	}*/
 	system("pause");
 }
