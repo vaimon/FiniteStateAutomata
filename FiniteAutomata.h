@@ -6,9 +6,10 @@
 #include <fstream>
 #include <algorithm>
 #include <initializer_list>
+#include <set>
 
 class FiniteAutomata {
-	std::map<std::string, std::map<char, std::string>> transitionFunction;
+	std::map<std::string, std::map<char, std::set<std::string>>> transitionFunction;
 	std::vector<std::string> finiteStates;
 	int stateCount;
 	std::string startingState;
@@ -41,6 +42,9 @@ public:
 		}
 		while (std::getline(in, line))
 		{
+			if (line.size() == 0) {
+				return;
+			}
 			auto splitted = split(line);
 			if (!(splitted[0] == "+" || splitted[0] == "-")) {
 				throw std::exception("File parsing exception: Transition function lines must start with '+' or '-'.");
@@ -54,14 +58,14 @@ public:
 			if (startingState == "") {
 				startingState = state;
 			}
-
+			transitionFunction[state] = {};
 			for (size_t i = 2; i < splitted.size(); i++)
 			{
 				auto pair = split(splitted[i], ':');
 				if (pair.size() != 2 || pair[0].size() != 1) {
 					throw std::exception("File parsing exception: Error while parsing state.");
 				}
-				transitionFunction[state][pair[0][0]] = pair[1];
+				transitionFunction[state][pair[0][0]].insert(pair[1]);
 			}
 		}
 	}
@@ -83,7 +87,20 @@ public:
 			centerText(st.first.c_str(),5);
 			std::cout << "   |   ";
 			for (auto s : alphabet) {
-				centerText(st.second[s].c_str(),11);
+				std::string wholestate = "";
+				if (st.second[s].size() > 0) {
+					for (auto state : st.second[s]) {
+						wholestate += state + " ";
+					}
+
+					wholestate.replace(--wholestate.end(), wholestate.end(), "");
+				}
+				else
+				{
+					wholestate = " ";
+				}
+				
+				centerText(wholestate.c_str(),11);
 				std::cout << "   |   ";
 			}
 			std::cout << "\n";
@@ -93,14 +110,28 @@ public:
 	}
 
 	bool recognize(const std::string& input) {
-		std::string state = startingState;
-		for (auto p = input.begin(); p < input.end(); p++) {
-			state = transitionFunction[state][*p];
-		}
-		return std::find(finiteStates.begin(), finiteStates.end(), state) != finiteStates.end();
+		return recognize_work(input, startingState);
 	}
 
 private:
+
+	bool recognize_work(const std::string& input, std::string state) {
+		for (auto p = input.begin(); p < input.end(); p++) {
+			auto stateSet = transitionFunction[state][*p];
+			if (stateSet.size() == 1) {
+				state = *stateSet.begin();
+			}
+			else {
+				for (auto q = stateSet.begin(); q != stateSet.end(); ++q) {
+					if (recognize_work(std::string(p + 1, input.end()), *q)) {
+						return true;
+					}
+				}
+				return false;
+			}
+		}
+		return std::find(finiteStates.begin(), finiteStates.end(), state) != finiteStates.end();
+	}
 
 	std::vector<std::string> split(const std::string& text, char sep = ' ') {
 		std::vector<std::string> tokens;
