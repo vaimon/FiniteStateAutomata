@@ -32,8 +32,9 @@ public:
 		std::ifstream in(pathToFile, std::ios_base::in);
 		std::string line;
 		if (!in) {
-			std::cout << "Error while opening the file." << std::endl;
-			return;
+			std::cout << "\nError while opening the file.\n" << std::endl;
+			system("pause");
+			exit(1);
 		}
 		std::getline(in, line);
 		for (auto s : split(line)) {

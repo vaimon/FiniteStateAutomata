@@ -18,9 +18,13 @@ int main() {
 	setlocale(LC_ALL, "RUS");
 	showTitle("Условия задачи");
 	cout << "Недетерминированный конечный автомат задан в виде таблицы переходов. Напишите программу, которая считает эту таблицу из файла и с помощью алгоритма детерминизации строит эквивалентный детерминированный автомат.\n";
+	cout << "Введите имя файла с автоматом:" << endl;
+	string name;
+	cin >> name;
+	FiniteAutomata automata(name);
 	//FiniteAutomata automata("automata.txt");
 	//FiniteAutomata automata("automata2.txt");
-	FiniteAutomata automata("automata3.txt");
+	//FiniteAutomata automata("automata3.txt");
 	//FiniteAutomata automata("automata4.txt");
 	showTitle("Функция переходов");
 	automata.printTransitionFunction();
